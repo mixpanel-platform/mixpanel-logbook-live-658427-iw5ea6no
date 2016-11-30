@@ -10,14 +10,14 @@
     
     var configuration = {
         start_date: {
-          year: 2015, month: 12, day: 1
+          year: 2016, month: 11, day: 1
         },
         end_date: {
-          year: 2016, month: 3, day: 31
+          year: 2016, month: 11, day: 30
         }, steps: [
-          "Item Detail Page",
-          "Added To Cart",
-          "Abandon Cart"]
+          "$notification_delivery",
+          "$notification_open",
+          "Save log entry"]
     };
 
     </script>
@@ -83,9 +83,9 @@
         var month = $(element);
         
         MP.api.funnel(
-          "Item Detail Page",
-          "Added To Cart",
-          "Abandon Cart",
+          "$notification_delivery",
+          "$notification_open",
+          "Save log entry",
           {
             from: month.data("idate"),
             to: month.data("fdate"),
