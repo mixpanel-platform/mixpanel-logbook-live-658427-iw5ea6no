@@ -5,11 +5,142 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+    <script>
+    //Setting up shop
+    
+    var configuration = {
+        start_date: {
+          year: 2015, month: 12, day: 1
+        },
+        end_date: {
+          year: 2016, month: 3, day: 31
+        }, steps: [
+          "Item Detail Page",
+          "Added To Cart",
+          "Abandon Cart"]
+    };
+
+    </script>
+    <style type="text/css">
+    #months ul{ overflow: hidden; }
+    #months li{
+      float: left:; margin-left: 10px; display: block;
+    }
+    </style>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
+    <div class="mixpanel-platform-section">
+      <h1>Funnels over time</h1>
+      <div id="months">
+        <ul>
+          
+        </ul>
+      </div>
+      <div id="graph"></div>
+      <div id="graph2"></div>
+    </div>
+    
     <script>
-      // Run queries and display results here
+      var eventGraph  = $('#graph').MPChart({chartType: 'bar', stacked: true});
+      var eventGraph2  = $('#graph2').MPChart({chartType: 'line'});
+      var months = $("#months ul");
+
+
+      //creating n months
+      var iDate = new Date(configuration.start_date.year, configuration.start_date.month-1, configuration.start_date.day);
+      //console.log(iDate);
+      var fDate = new Date(configuration.end_date.year, configuration.end_date.month-1, configuration.end_date.day);
+      //console.log(fDate);
+      var curDate = iDate;
+      var lastDay, curMonth, li;
+      var all_results = [];
+      var finalObject = {};
+      var finalObject2 = {};
+      while(curDate < fDate){
+        
+        lastDay = new Date(curDate.getFullYear(), (curDate.getMonth()+1), 0);
+        //console.log(lastDay);
+
+        curMonth = {};
+        
+        if(curDate.getMonth()+1 < 10){
+          curMonth.firstDay = curDate.getFullYear() + "-0" + (curDate.getMonth()+1) + "-0" + curDate.getDate();
+        }else{
+          curMonth.firstDay = curDate.getFullYear() + "-" + (curDate.getMonth()+1) + "-0" + curDate.getDate();
+        }
+
+        curMonth.lastDay = lastDay.getFullYear() + "-" + (lastDay.getMonth()+1) + "-" + lastDay.getDate();
+
+        li = "<li data-days='"+lastDay.getDate()+"' data-idate='"+curMonth.firstDay+"' data-fdate='"+curMonth.lastDay+"'>"+curMonth.firstDay+"</li>";
+        months.append(li);
+        curDate = new Date(curDate.getFullYear(), (curDate.getMonth()+1), 1);
+        
+      }
+      
+      //doing the queries
+
+      months.find('li').each(function(i, element){
+        var month = $(element);
+        
+        MP.api.funnel(
+          "Item Detail Page",
+          "Added To Cart",
+          "Abandon Cart",
+          {
+            from: month.data("idate"),
+            to: month.data("fdate"),
+            length: month.data("days"),
+            interval: month.data("days")
+          }
+        ).done(function(results) {
+            all_results.push({month: month.data("idate"), val: results});
+            if(all_results.length == months.find('li').length){
+              all_requests_done();
+            }
+        });
+
+      });
+
+      function all_requests_done(){
+        console.log(all_results);
+        var n = all_results.length;
+        var nn = 0;
+        var stepText = "", monthText = "";
+        var nSteps = all_results[0].val.length;
+        var tempObj;
+
+        for (var i = 0; i < n; i++){
+          nn = all_results[i].val.length;
+          monthText = all_results[i].month;
+          for(var j = 0; j < nn; j++){
+            stepText = all_results[i].val[j][monthText].event;
+            if(!finalObject.hasOwnProperty(stepText)){
+              finalObject[stepText] = {};
+            }
+            if(!finalObject[stepText].hasOwnProperty(monthText)){
+              finalObject[stepText][monthText] = {};
+            }
+            if(!finalObject2.hasOwnProperty(monthText)){
+              finalObject2[monthText] = {};
+            }
+            finalObject[stepText][monthText] = all_results[i].val[j][monthText].count;
+            if(j == nn-1){
+              finalObject2[monthText] = all_results[i].val[j][monthText].overall_conv_ratio*100;
+            }
+          }
+        }
+
+
+       
+        eventGraph.MPChart('setData', finalObject);
+        eventGraph2.MPChart('setData', {"Overall Conversion":finalObject2});
+        console.log(finalObject);
+      }// function ends
+      
+
+
     </script>
+      
   </body>
 </html>
+
