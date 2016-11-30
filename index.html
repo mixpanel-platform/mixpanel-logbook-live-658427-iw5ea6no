@@ -15,8 +15,8 @@
         end_date: {
           year: 2016, month: 11, day: 30
         }, steps: [
-          "$notification_delivery",
-          "$notification_open",
+          "$campaign_delivery",
+          "$campaign_open",
           "Save log entry"]
     };
 
@@ -83,8 +83,8 @@
         var month = $(element);
         
         MP.api.funnel(
-          "$notification_delivery",
-          "$notification_open",
+          "$campaign_delivery",
+          "$campaign_open",
           "Save log entry",
           {
             from: month.data("idate"),
